@@ -1,2 +1,21 @@
 ---
-# TODO: implement the Ansible apply playbook for Part 3.
+# Applies one complete Loopback definition. Variables come from
+# app/backends/ansible.py; credentials come from the environment.
+- name: Apply IPA2026 interface
+  hosts: all
+  gather_facts: false
+  connection: ansible.netcommon.network_cli
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_user: "{{ lookup('env', 'ROUTER_USER') }}"
+    ansible_password: "{{ lookup('env', 'ROUTER_PASS') }}"
+  tasks:
+    - name: Configure interface
+      cisco.ios.ios_config:
+        parents: "interface {{ interface_name }}"
+        lines:
+          - "description {{ description }}"
+          - "ip address {{ ipv4_address }} {{ netmask }}"
+          - "{{ 'shutdown' if admin_state == 'down' else 'no shutdown' }}"
+          - "{{ 'shutdown' if shutdown | bool else 'no shutdown' }}"
+        defaults: true
